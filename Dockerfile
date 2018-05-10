@@ -10,12 +10,6 @@ WORKDIR /app
 RUN npm install
 RUN npm run build
 
-
-#FROM amaysim/serverless:1.26.1
-#RUN npm install vue
-#RUN npm install vue-material@beta --save
-#RUN npm install -g vue-cli
-#RUN npm install -g webpack webpack-dev-server
-#RUN npm install --save vue-material
-#RUN npm install --save axios
-#WORKDIR /app
+FROM amaysim/serverless:1.26.1
+COPY --from=vue-app-builder /app /app
+WORKDIR /app
