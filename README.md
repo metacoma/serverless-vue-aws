@@ -1,4 +1,6 @@
 ```
-docker build -t serverless-vue-aws:latest .
-docker run --rm -it --mount ~/aws:/root/aws sls deploy
+# LCM
+$ docker-compose run --rm serverless sls deploy
+$ docker-compose run --rm serverless sls invoke --function func
+$ docker-compose run --rm serverless sls remove
 ```
