@@ -1,0 +1,11 @@
+version: '3'
+
+services:
+  serverless:
+    image: serverless-vue-aws:latest
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    working_dir: /app/myService
+    volumes:
+      - ~/.aws:/root/.aws
