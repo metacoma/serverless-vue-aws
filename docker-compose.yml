@@ -6,6 +6,7 @@ services:
     build:
       context: ./
       dockerfile: Dockerfile
-    working_dir: /app/myService
+    working_dir: /sls
     volumes:
-      - ~/.aws:/root/.aws
+      - ~/.aws:/root/.aws:ro
+      - ./serverless:/sls

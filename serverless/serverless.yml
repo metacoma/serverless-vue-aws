@@ -1,0 +1,78 @@
+# Welcome to serverless. Read the docs
+# https://serverless.com/framework/docs/
+
+service: serverless-courses2
+
+plugins:
+  - serverless-s3-sync
+
+custom:
+  siteName: courses3
+  s3Sync:
+    - bucketName: ${self:custom.siteName}
+      localDir: dist
+
+provider:
+  name: aws
+  runtime: nodejs6.10
+  stage: prod
+  stackTags:
+    serverless:servess: ${self:service}
+
+functions:
+  user:
+    handler: handler.user
+  vm:
+    handler: handler.vm
+  admin:
+    handler: handler.admin
+
+resources:
+  Resources:
+    ## Specifying the S3 Bucket
+    StaticSite:
+      Type: AWS::S3::Bucket
+      Properties:
+        AccessControl: PublicRead
+        BucketName: ${self:custom.siteName}
+        WebsiteConfiguration:
+          IndexDocument: index.xhtml
+          ErrorDocument: index.xhtml
+
+    StaticSiteS3BucketPolicy:
+      Type: AWS::S3::BucketPolicy
+      Properties:
+        Bucket:
+          Ref: StaticSite
+        PolicyDocument:
+          Statement:
+            - Sid: PublicReadGetObject
+              Effect: Allow
+              Principal: "*"
+              Action:
+              - s3:GetObject
+              Resource:
+                Fn::Join: [
+                  "", [
+                    "arn:aws:s3:::",
+                    {
+                      "Ref": "StaticSite"
+                    },
+                    "/*"
+                  ]
+                ]
+
+  Outputs:
+    StaticSiteS3BucketName:
+      Value:
+        'Ref': StaticSite
+    StaticSiteS3BucketDomainName:
+      Value:
+        Fn::GetAtt:
+          - StaticSite
+          - DomainName
+    StaticSiteS3BucketWebsiteURL:
+      Value:
+        Fn::GetAtt:
+          - StaticSite
+          - WebsiteURL
