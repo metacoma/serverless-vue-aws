@@ -1,0 +1,10 @@
+{
+  "name": "courses",
+  "description": "",
+  "version": "0.1.0",
+  "dependencies": {},
+  "devDependencies": {
+    "serverless-finch": "^2.1.2",
+    "serverless-s3-sync": "^1.5.1"
+  }
+}
