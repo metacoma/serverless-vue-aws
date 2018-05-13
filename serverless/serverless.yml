@@ -4,7 +4,7 @@ plugins:
   - serverless-s3-sync
 
 custom:
-  siteName: courses3
+  siteName: courses5
   s3Sync:
     - bucketName: ${self:custom.siteName}
       localDir: dist
@@ -15,7 +15,8 @@ provider:
   stage: prod
   environment:
     DYNAMODB_USER_TABLE: ${self:service}-${self:provider.stage}
-  region: us-east-1
+    AWS_REGION: us-east-2
+  region: us-east-2
   iamRoleStatements:
     - Effect: Allow
       Action:
