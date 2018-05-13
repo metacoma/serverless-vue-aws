@@ -10,8 +10,10 @@ WORKDIR /app
 RUN npm install
 RUN npm run build
 
-FROM amaysim/serverless:1.26.1
+FROM amaysim/serverless:1.27.1
 RUN npm install -g                      \
   serverless-finch
 COPY --from=vue-app-builder /app /app
+ADD ./entrypoint.sh /usr/local/bin/entrypoint.sh
 WORKDIR /app
+#ENTRYPOINT [ "sh", "-c", "rm -rf /sls/dist && cp -vr /app/dist /sls/dist && $@" ]
