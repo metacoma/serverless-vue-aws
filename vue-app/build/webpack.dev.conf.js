@@ -38,7 +38,7 @@ const devWebpackConfig = merge(baseWebpackConfig, {
       ? { warnings: false, errors: true }
       : false,
     //publicPath: config.dev.assetsPublicPath,
-    publicPath: "/courses3/static"
+    publicPath: "/courses3/static",
     proxy: config.dev.proxyTable,
     quiet: true, // necessary for FriendlyErrorsPlugin
     watchOptions: {

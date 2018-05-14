@@ -3,7 +3,7 @@
     <md-toolbar class="md-primary">
       <h3 class="md-title">Courses</h3>
     </md-toolbar>
-   <form novalidate class="md-alignment-top-center" action=/user>
+   <form novalidate class="login md-alignment-top-center" @submit.prevent="login">
       <md-card class="md-layout-item md-size-50 md-small-size-100">
         <md-card-header>
           <div class="md-title">Auth</div>
@@ -12,8 +12,8 @@
           <div class="md-layout md-gutter">
             <div class="md-layout-item md-small-size-100">
               <md-field>
-                <label for="first-name">email</label>
-                <md-input name="first-name" id="first-name" autocomplete="given-name" />
+                <label for="email">email</label>
+                <md-input name="email" v-model="email" id="email" />
               </md-field>
               <md-field>
                 <label for="password">password</label>
@@ -31,8 +31,26 @@
 </template>
 
 <script>
+import axios from 'axios'
+
 export default {
-  name: 'Login'
+  name: 'Login',
+  methods: {
+    login: function () {
+        axios({ method: "GET", "url": "https://1xqx3jhp01.execute-api.us-east-2.amazonaws.com/prod/user", params: {"user": this.email, 'password': this.password} }).then(result => {
+                console.log(result.data)
+                if (result.data.Item) {
+                  //this.currentComponent = this.component.User
+                  window.location.hash = "/User"
+                  console.log("AUTH")
+                } else {
+                  console.log("NOAUTH")
+                }
+            }, error => {
+                console.error(error);
+            });
+       }
+  }
 }
 </script>
 

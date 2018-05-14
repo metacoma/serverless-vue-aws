@@ -1,11 +1,38 @@
 'use strict';
 
 const AWS = require('aws-sdk');
-AWS.config.update({region: process.env.AWS_REGION});
+AWS.config.update({region: process.env.S_REGION});
 
 module.exports.user = (event, context, callback) => {
   const dynamoDb = new AWS.DynamoDB.DocumentClient();
 
+  var user = event.queryStringParameters.user;
+  var password = event.queryStringParameters.password;
+
+ var params = {
+  Key: {
+    email: user
+  },
+  TableName: process.env.DYNAMODB_USER_TABLE,
+ };
+
+ dynamoDb.get(params, function(err, data) {
+   if (err) {
+      console.log(err, err.stack); // an error occurred
+   } else {
+    const response = {
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin' : '*'
+      },
+      statusCode: 200,
+      body: JSON.stringify(data)
+    };
+    callback(null, response);
+   }
+ });
+
+  /*
   const params = {
     TableName: process.env.DYNAMODB_USER_TABLE,
     Item: {
@@ -27,11 +54,19 @@ module.exports.user = (event, context, callback) => {
 
     // create a response
     const response = {
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin' : '*'
+      },
       statusCode: 200,
-      body: JSON.stringify(params.Item),
+      body: JSON.stringify({
+        'user': user,
+        'password': password
+      })
     };
     callback(null, response);
   });
+  */
 
 };
 
@@ -39,7 +74,7 @@ module.exports.vm = (event, context, callback) => {
   var ec2 = new AWS.EC2({apiVersion: '2016-11-15'});
 
 	var instanceParams = {
-  	ImageId: 'ami-5ae1cb3f',
+  	ImageId: 'ami-ad4812c8',
   	InstanceType: 't2.nano',
   	KeyName: 'test',
  		MinCount: 1,
@@ -51,13 +86,24 @@ module.exports.vm = (event, context, callback) => {
 	instancePromise.then(
   	function(data) {
     	console.log(data);
+
+      const response = {
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin' : '*'
+        },
+        statusCode: 200,
+        body: JSON.stringify(data)
+      };
+      callback(null, response);
+
     	var instanceId = data.Instances[0].InstanceId;
     	console.log("Created instance", instanceId);
     	// Add tags to the instance
-    	tagParams = {Resources: [instanceId], Tags: [
+    	var tagParams = {Resources: [instanceId], Tags: [
       	{
           Key: 'Name',
-          Value: 'SDK Sample'
+          Value: 'Smashware courses'
       	}
     	]};
     	// Create a promise on an EC2 service object
@@ -74,6 +120,7 @@ module.exports.vm = (event, context, callback) => {
     function(err) {
     console.error(err, err.stack);
 	});
+
 };
 
 module.exports.admin = (event, context, callback) => {
@@ -81,7 +128,7 @@ module.exports.admin = (event, context, callback) => {
     statusCode: 200,
     body: JSON.stringify({
       message: 'OK',
-      endpoint: 'vm',
+      endpoint: 'admin',
       input: event,
     }),
   };

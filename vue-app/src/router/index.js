@@ -13,13 +13,13 @@ export default new Router({
       path: '/',
       name: 'Login',
       component: Login
-    }
-    /*
+    },
     {
       path: '/user',
       name: 'User',
       component: User
     },
+    /*
     {
       path: '/vmboot',
       name: 'User',
