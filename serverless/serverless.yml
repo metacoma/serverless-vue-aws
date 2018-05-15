@@ -69,11 +69,43 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
             allowCredentials: false
+  vmDestroy:
+    handler: handler.vmDestroy
+    events:
+      - http:
+          path: vmDestroy
+          method: get
+          cors:
+            origin: '*'
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+            allowCredentials: false
   admin:
     handler: handler.admin
     events:
       - http:
           path: admin
+          method: get
+          cors:
+            origin: '*'
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+            allowCredentials: false
+  vmDetail:
+    handler: handler.vmDetail
+    events:
+      - http:
+          path: vmDetail
           method: get
           cors:
             origin: '*'

@@ -19,12 +19,12 @@ export default new Router({
       name: 'User',
       component: User
     },
-    /*
     {
       path: '/vmboot',
       name: 'User',
       component: VmBoot
     },
+    /*
     {
       path: '/admin',
       name: 'User',

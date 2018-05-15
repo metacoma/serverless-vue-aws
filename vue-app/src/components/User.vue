@@ -28,13 +28,20 @@ import axios from 'axios'
 
 export default {
   name: 'User',
+  data: function() {
+    return {
+      'vmName': '',
+      'privateDnsName': '',
+      'privateIpAddr': '',
+    }
+  },
   methods: {
     bootvm: function () {
-        axios({ method: "GET", "url": "https://1xqx3jhp01.execute-api.us-east-2.amazonaws.com/prod/vm", params: {"step": this.step } }).then(result => {
-              console.log(result.data)
-            }, error => {
-                console.error(error);
-        });
+        axios({ method: "GET", "url": "https://1xqx3jhp01.execute-api.us-east-2.amazonaws.com/prod/vm", params: {'step': this.step } }).then(result => {
+              window.location.hash = "/VmBoot?instanceId=" + result.data.Instances[0].InstanceId
+        }, error => {
+                console.error(error)
+        })
     }
   }
 }
