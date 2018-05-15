@@ -313,7 +313,8 @@ module.exports.scheduleTest = (event, context, callback) => {
         Id: '1',
         Arn: terminateLambdaFuncArn,
         Input: JSON.stringify({
-          'instanceId': instanceId
+          'instanceId': instanceId,
+          'ruleName': ruleName
         })
       }
     ]
@@ -340,9 +341,27 @@ module.exports.scheduleTest = (event, context, callback) => {
 }
 
 module.exports.vmDestroy = (event, context, callback) => {
+	var cloudwatchevents = new AWS.CloudWatchEvents({apiVersion: '2015-10-07'});
 
   console.log("vmDESTROY: " + JSON.stringify(event))
   console.log("CONTEXT: " + JSON.stringify(context))
+
+  cloudwatchevents.listTargetsByRule({ 'Rule': event.ruleName } , function(err, data) {
+      if (err) console.log(err, err.stack); // an error occurred
+      else {
+        console.log(data);           // successful response
+        cloudwatchevents.removeTargets({ 'Rule': event.ruleName, 'Ids' : data.Targets.map(a => a.Id) }, function(err, data) {
+              if (err) console.log(err, err.stack); // an error occurred
+              else     console.log(data);           // successful response
+        })
+      }
+  });
+
+  cloudwatchevents.deleteRule({ 'Name': event.ruleName }, function(err, data) {
+    if (err) console.log(err, err.stack); // an error occurred
+    else     console.log(data);           // successful response
+  });
+
 /*
  var ec2 = new AWS.EC2({apiVersion: '2016-11-15'});
 
