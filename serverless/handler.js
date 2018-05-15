@@ -286,8 +286,64 @@ module.exports.vmDetail = (event, context, callback) => {
   })
 };
 
+module.exports.scheduleTest = (event, context, callback) => {
+	var cloudwatchevents = new AWS.CloudWatchEvents({apiVersion: '2015-10-07'});
+
+	var instanceId = event.queryStringParameters.instanceId;
+  const ruleName = 'terminate-ec2-' + instanceId
+  const terminateLambdaFuncArn = 'arn:aws:lambda:us-east-2:247051893090:function:serverless-courses443-prod-vmDestroy'
+
+
+	var ruleParams = {
+		Name: ruleName,
+		Description: 'Destroy ec2 instance ' + instanceId,
+		ScheduleExpression: 'cron(* * * * ? *)',
+		State: "ENABLED"
+	};
+
+  cloudwatchevents.putRule(ruleParams, function(err, data) {
+      if (err) console.log(err, err.stack);
+      else     console.log(data);
+  });
+
+  var targetRule = {
+    Rule: ruleName,
+    Targets: [
+      {
+        Id: '1',
+        Arn: terminateLambdaFuncArn,
+        Input: JSON.stringify({
+          'instanceId': instanceId
+        })
+      }
+    ]
+  }
+
+  cloudwatchevents.putTargets(targetRule, function(err, data) {
+      if (err) console.log(err, err.stack); // an error occurred
+      else     console.log(data);           // successful response
+  });
+
+  const response = {
+    headers: {
+      'Content-Type': 'application/json',
+      'Access-Control-Allow-Origin' : '*'
+    },
+    statusCode: 200,
+    body: JSON.stringify({
+      message: 'OK'
+    })
+  };
+
+  callback(null, response);
+
+}
 
 module.exports.vmDestroy = (event, context, callback) => {
+
+  console.log("vmDESTROY: " + JSON.stringify(event))
+  console.log("CONTEXT: " + JSON.stringify(context))
+/*
  var ec2 = new AWS.EC2({apiVersion: '2016-11-15'});
 
  var instanceId = event.queryStringParameters.instanceId;
@@ -299,38 +355,13 @@ module.exports.vmDestroy = (event, context, callback) => {
  ec2.terminateInstances(params, function(err, data) {
     if (err) {
       console.log(err, err.stack)
-      /*
-      const response = {
-        statusCode: 200,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin' : '*'
-        },
-        body: JSON.stringify({
-          'message': 'ERR'
-        }
-      }),
-      callback(null, response);
-      */
     }
     else {
       console.log(data)
-      /*
-      const response = {
-        statusCode: 200,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin' : '*'
-        },
-        body: JSON.stringify({
-          'message': 'OK'
-        }
-      }),
-      callback(null, response);
-      */
     }
 
  });
  callback(null, 'Finished');
+ */
 
 }
