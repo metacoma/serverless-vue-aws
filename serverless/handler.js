@@ -339,7 +339,7 @@ module.exports.scheduleTest = (event, context, callback) => {
 		Name: ruleName,
     //RoleArn: ruleRoleArn,
 		Description: 'Destroy ec2 instance ' + instanceId,
-		ScheduleExpression: 'cron(* * * * ? *)',
+		ScheduleExpression: 'rate(5 minutes)',
 		State: "ENABLED"
 	};
 
