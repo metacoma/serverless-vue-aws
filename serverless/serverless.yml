@@ -20,8 +20,9 @@ provider:
   iamRoleStatements:
     - Effect: Allow
       Action:
-        - lambda:InvokeFunction
+        - lambda:*
       Resource: "*"
+
     - Effect: Allow
       Action:
         - dynamodb:Query
@@ -31,16 +32,19 @@ provider:
         - dynamodb:UpdateItem
         - dynamodb:DeleteItem
       Resource: "arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.DYNAMODB_USER_TABLE}"
-			# FIXME PERMISSIONS!
+
+      # FIXME PERMISSIONS!
     - Effect: Allow
       Action:
-      	- ec2:*
+        - ec2:*
       Resource: "*"
+
     - Effect: Allow
       Action:
-      	- events:*
-			# FIXME RESOURCE!
+        - events:*
+      # FIXME RESOURCE!
       Resource: "*"
+
   stackTags:
     serverless:servess: ${self:service}
 
@@ -79,6 +83,7 @@ functions:
             allowCredentials: false
   vmDestroy:
     handler: handler.vmDestroy
+    #role: awsLambdaRole
     events:
       - http:
           path: vmDestroy
@@ -128,6 +133,7 @@ functions:
 
   scheduleTest:
     handler: handler.scheduleTest
+    #role: awsLambdaRole
     events:
       - http:
           path: scheduleTest
@@ -147,6 +153,33 @@ functions:
 
 resources:
   Resources:
+    awsLambdaRole:
+      Type: AWS::IAM::Role
+      Properties:
+        RoleName: awsLambdaRole
+        AssumeRolePolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service:
+                  - lambda.amazonaws.com
+                  - events.amazonaws.com
+              Action: sts:AssumeRole
+        Policies:
+          - PolicyName: awsLambdaRolePolicy
+            PolicyDocument:
+              #Version: '2012-10-17'
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - "lambda:*"
+                    - "dynamodb:*"
+                    - "ec2:*"
+                    - "events:*"
+                    - "cloudwatch:*"
+                  Resource: "*"
+
     StaticSite:
       Type: AWS::S3::Bucket
       Properties:

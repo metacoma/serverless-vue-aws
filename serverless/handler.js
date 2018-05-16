@@ -73,7 +73,7 @@ module.exports.user = (event, context, callback) => {
     },
   };
 
- 	dynamoDb.put(params, (error) => {
+	dynamoDb.put(params, (error) => {
     // handle potential errors
     if (error) {
       console.error(error);
@@ -107,9 +107,9 @@ module.exports.user = (event, context, callback) => {
 function get_ec2_public_ip(ec2, instanceId) {
 
      var instanceParams = {
-  			InstanceIds: [
+				InstanceIds: [
 					instanceId
-  			],
+				],
 			};
 
       ec2.describeInstances(instanceParams, function(err, data) {
@@ -149,43 +149,43 @@ module.exports.vm = (event, context, callback) => {
   var ec2 = new AWS.EC2({apiVersion: '2016-11-15'});
 
 	var instanceParams = {
-  	ImageId: 'ami-ad4812c8',
-  	InstanceType: 't2.nano',
-  	KeyName: 'smashware-courses-access-key',
- 		MinCount: 1,
- 		MaxCount: 1
+		ImageId: 'ami-ad4812c8',
+		InstanceType: 't2.nano',
+		KeyName: 'smashware-courses-access-key',
+		MinCount: 1,
+		MaxCount: 1
 	};
 
 	var instancePromise = new AWS.EC2({apiVersion: '2016-11-15'}).runInstances(instanceParams).promise();
 
 
 	instancePromise.then(
-  	function(data) {
-    	console.log(data);
+		function(data) {
+			console.log(data);
 
 
-    	var instanceId = data.Instances[0].InstanceId;
-    	console.log("Created instance", instanceId);
-    	// Add tags to the instance
-    	var tagParams = {Resources: [instanceId], Tags: [
-      	{
+			var instanceId = data.Instances[0].InstanceId;
+			console.log("Created instance", instanceId);
+			// Add tags to the instance
+			var tagParams = {Resources: [instanceId], Tags: [
+				{
           Key: 'Name',
           Value: 'Smashware courses'
-      	}
-    	]};
+				}
+			]};
 
 
 
-    	// Create a promise on an EC2 service object
-    	var tagPromise = new AWS.EC2({apiVersion: '2016-11-15'}).createTags(tagParams).promise();
-    	// Handle promise's fulfilled/rejected states
-    	tagPromise.then(
-      	function(data) {
-        	console.log("Instance tagged");
-      	}).catch(
-        	function(err) {
-        	console.error(err, err.stack);
-      	});
+			// Create a promise on an EC2 service object
+			var tagPromise = new AWS.EC2({apiVersion: '2016-11-15'}).createTags(tagParams).promise();
+			// Handle promise's fulfilled/rejected states
+			tagPromise.then(
+				function(data) {
+					console.log("Instance tagged");
+				}).catch(
+					function(err) {
+					console.error(err, err.stack);
+				});
 
       const response = {
         headers: {
@@ -197,10 +197,10 @@ module.exports.vm = (event, context, callback) => {
       };
       callback(null, response);
 
-  		}).catch(
-      	function(err) {
+			}).catch(
+				function(err) {
         console.error(err, err.stack);
-	  	});
+			});
 };
 
 module.exports.admin = (event, context, callback) => {
@@ -254,7 +254,7 @@ module.exports.vmDetail = (event, context, callback) => {
 
   var instanceParams = {
     InstanceIds: [
-		  instanceId
+			instanceId
     ],
   };
 
@@ -286,25 +286,10 @@ module.exports.vmDetail = (event, context, callback) => {
   })
 };
 
-module.exports.scheduleTest = (event, context, callback) => {
-	var cloudwatchevents = new AWS.CloudWatchEvents({apiVersion: '2015-10-07'});
-
-	var instanceId = event.queryStringParameters.instanceId;
-  const ruleName = 'terminate-ec2-' + instanceId
+function addTargetToRule(callback, ruleName, instanceId, statementId) {
+	let cloudwatchevents = new AWS.CloudWatchEvents({apiVersion: '2015-10-07'});
   const terminateLambdaFuncArn = 'arn:aws:lambda:us-east-2:247051893090:function:serverless-courses443-prod-vmDestroy'
 
-
-	var ruleParams = {
-		Name: ruleName,
-		Description: 'Destroy ec2 instance ' + instanceId,
-		ScheduleExpression: 'cron(* * * * ? *)',
-		State: "ENABLED"
-	};
-
-  cloudwatchevents.putRule(ruleParams, function(err, data) {
-      if (err) console.log(err, err.stack);
-      else     console.log(data);
-  });
 
   var targetRule = {
     Rule: ruleName,
@@ -314,7 +299,8 @@ module.exports.scheduleTest = (event, context, callback) => {
         Arn: terminateLambdaFuncArn,
         Input: JSON.stringify({
           'instanceId': instanceId,
-          'ruleName': ruleName
+          'ruleName': ruleName,
+          'statementId': statementId
         })
       }
     ]
@@ -322,29 +308,79 @@ module.exports.scheduleTest = (event, context, callback) => {
 
   cloudwatchevents.putTargets(targetRule, function(err, data) {
       if (err) console.log(err, err.stack); // an error occurred
-      else     console.log(data);           // successful response
+      else {
+        console.log('add Target to rule ' + ruleName)
+        const response = {
+          headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin' : '*'
+          },
+          statusCode: 200,
+          body: JSON.stringify({
+            message: 'OK'
+          })
+        };
+
+        callback(null, response);
+      }
   });
+}
 
-  const response = {
-    headers: {
-      'Content-Type': 'application/json',
-      'Access-Control-Allow-Origin' : '*'
-    },
-    statusCode: 200,
-    body: JSON.stringify({
-      message: 'OK'
-    })
-  };
+module.exports.scheduleTest = (event, context, callback) => {
+	var cloudwatchevents = new AWS.CloudWatchEvents({apiVersion: '2015-10-07'});
+  var lambda = new AWS.Lambda({apiVersion: '2015-03-31'});
 
-  callback(null, response);
+	var instanceId = event.queryStringParameters.instanceId;
+  const ruleName = 'terminate-ec2-' + instanceId
+  const lambdaFuncName = "serverless-courses443-prod-vmDestroy"
+
+
+	var ruleParams = {
+		Name: ruleName,
+    //RoleArn: ruleRoleArn,
+		Description: 'Destroy ec2 instance ' + instanceId,
+		ScheduleExpression: 'cron(* * * * ? *)',
+		State: "ENABLED"
+	};
+
+  cloudwatchevents.putRule(ruleParams, function(err, ruleData) {
+      if (err) console.log(err, err.stack);
+      else {
+        console.log('Rule ' + ruleName + ' added')
+
+        const statementId = "permission-lambda-" + instanceId
+
+				var permissionParams = {
+					Action: "lambda:InvokeFunction",
+					FunctionName: lambdaFuncName,
+					Principal: "events.amazonaws.com",
+					SourceArn: ruleData.RuleArn,
+					StatementId: statementId
+				};
+
+        console.log('Add permission to ' + ruleName + ' added')
+ 				lambda.addPermission(permissionParams, function(err, data) {
+   				if (err) console.log(err, err.stack); // an error occurred
+   				else {
+     				console.log("Permission was added");
+
+        		addTargetToRule(callback, ruleName, instanceId, statementId)
+					}
+ 				});
+
+      }
+  });
 
 }
 
 module.exports.vmDestroy = (event, context, callback) => {
 	var cloudwatchevents = new AWS.CloudWatchEvents({apiVersion: '2015-10-07'});
+  var lambda = new AWS.Lambda({apiVersion: '2015-03-31'});
+  const lambdaFuncName = "serverless-courses443-prod-vmDestroy"
 
   console.log("vmDESTROY: " + JSON.stringify(event))
   console.log("CONTEXT: " + JSON.stringify(context))
+
 
   cloudwatchevents.listTargetsByRule({ 'Rule': event.ruleName } , function(err, data) {
       if (err) console.log(err, err.stack); // an error occurred
@@ -352,15 +388,33 @@ module.exports.vmDestroy = (event, context, callback) => {
         console.log(data);           // successful response
         cloudwatchevents.removeTargets({ 'Rule': event.ruleName, 'Ids' : data.Targets.map(a => a.Id) }, function(err, data) {
               if (err) console.log(err, err.stack); // an error occurred
-              else     console.log(data);           // successful response
+              else {
+                console.log('remove targets from rule ' + event.ruleName)
+
+                cloudwatchevents.deleteRule({ 'Name': event.ruleName }, function(err, data) {
+                  if (err) console.log(err, err.stack); // an error occurred
+                  else {
+                    console.log('delete rule ' + event.ruleName)
+                  }
+                });
+              }
         })
+
       }
   });
 
-  cloudwatchevents.deleteRule({ 'Name': event.ruleName }, function(err, data) {
-    if (err) console.log(err, err.stack); // an error occurred
-    else     console.log(data);           // successful response
-  });
+  let deletePermissionParams = {
+		FunctionName: lambdaFuncName,
+  	StatementId: event.statementId
+  }
+
+  lambda.removePermission(deletePermissionParams, function(err, data) {
+  	if (err) {
+			console.log(err, err.stack); // an error occurred
+		} else {
+   		console.log("Delete permission for " + lambdaFuncName + " statementId " + event.statementId)
+		}
+	});
 
 /*
  var ec2 = new AWS.EC2({apiVersion: '2016-11-15'});
