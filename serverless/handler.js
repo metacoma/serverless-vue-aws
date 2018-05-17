@@ -416,25 +416,22 @@ module.exports.vmDestroy = (event, context, callback) => {
 		}
 	});
 
-/*
  var ec2 = new AWS.EC2({apiVersion: '2016-11-15'});
 
- var instanceId = event.queryStringParameters.instanceId;
+ var instanceId = event.instanceId
 
  var params = {
      InstanceIds: [ instanceId ]
  };
 
- ec2.terminateInstances(params, function(err, data) {
+ ec2.terminateInstances({ InstanceIds: [ instanceId ] }, function(err, data) {
     if (err) {
       console.log(err, err.stack)
     }
     else {
-      console.log(data)
+      console.log("Instance " + instaceID + " was terminated")
     }
-
  });
  callback(null, 'Finished');
- */
 
 }

@@ -32,6 +32,8 @@
 
 <script>
 import axios from 'axios'
+import router from '../router'
+
 
 export default {
   name: 'Login',
@@ -41,7 +43,7 @@ export default {
                 console.log(result.data)
                 if (result.data.Item) {
                   //this.currentComponent = this.component.User
-                  window.location.hash = "/User"
+                  router.push('User')
                   console.log("AUTH")
                 } else {
                   console.log("NOAUTH")
