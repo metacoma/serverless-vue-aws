@@ -25,6 +25,7 @@
 
 <script>
 import axios from 'axios'
+import router from '../router'
 
 export default {
   name: 'User',
@@ -38,7 +39,8 @@ export default {
   methods: {
     bootvm: function () {
         axios({ method: "GET", "url": "https://1xqx3jhp01.execute-api.us-east-2.amazonaws.com/prod/vm", params: {'step': this.step } }).then(result => {
-              window.location.hash = "/VmBoot?instanceId=" + result.data.Instances[0].InstanceId
+              //window.location.hash = "/VmBoot?instanceId=" + result.data.Instances[0].InstanceId
+              router.push({path: 'vmBoot', query: {instanceId: result.data.Instances[0].InstanceId}})
         }, error => {
                 console.error(error)
         })

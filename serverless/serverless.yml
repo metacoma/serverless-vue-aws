@@ -131,23 +131,23 @@ functions:
               - X-Amz-User-Agent
             allowCredentials: false
 
-  scheduleTest:
-    handler: handler.scheduleTest
-    #role: awsLambdaRole
-    events:
-      - http:
-          path: scheduleTest
-          method: get
-          cors:
-            origin: '*'
-            headers:
-              - Content-Type
-              - X-Amz-Date
-              - Authorization
-              - X-Api-Key
-              - X-Amz-Security-Token
-              - X-Amz-User-Agent
-            allowCredentials: false
+#  scheduleTest:
+#    handler: handler.scheduleTest
+#    #role: awsLambdaRole
+#    events:
+#      - http:
+#          path: scheduleTest
+#          method: get
+#          cors:
+#            origin: '*'
+#            headers:
+#              - Content-Type
+#              - X-Amz-Date
+#              - Authorization
+#              - X-Api-Key
+#              - X-Amz-Security-Token
+#              - X-Amz-User-Agent
+#            allowCredentials: false
 
 
 

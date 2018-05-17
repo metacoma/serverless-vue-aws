@@ -42,7 +42,6 @@ export default {
         axios({ method: "GET", "url": "https://1xqx3jhp01.execute-api.us-east-2.amazonaws.com/prod/user", params: {"user": this.email, 'password': this.password} }).then(result => {
                 console.log(result.data)
                 if (result.data.Item) {
-                  //this.currentComponent = this.component.User
                   router.push('User')
                   console.log("AUTH")
                 } else {

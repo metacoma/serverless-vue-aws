@@ -153,7 +153,10 @@ module.exports.vm = (event, context, callback) => {
 		InstanceType: 't2.nano',
 		KeyName: 'smashware-courses-access-key',
 		MinCount: 1,
-		MaxCount: 1
+		MaxCount: 1,
+    SecurityGroups: [
+      'allow_all'
+    ],
 	};
 
 	var instancePromise = new AWS.EC2({apiVersion: '2016-11-15'}).runInstances(instanceParams).promise();
@@ -187,6 +190,7 @@ module.exports.vm = (event, context, callback) => {
 					console.error(err, err.stack);
 				});
 
+      scheduleTerminate(instanceId, 5);
       const response = {
         headers: {
           'Content-Type': 'application/json',
@@ -286,7 +290,7 @@ module.exports.vmDetail = (event, context, callback) => {
   })
 };
 
-function addTargetToRule(callback, ruleName, instanceId, statementId) {
+function addTargetToRule(ruleName, instanceId, statementId) {
 	let cloudwatchevents = new AWS.CloudWatchEvents({apiVersion: '2015-10-07'});
   const terminateLambdaFuncArn = 'arn:aws:lambda:us-east-2:247051893090:function:serverless-courses443-prod-vmDestroy'
 
@@ -310,6 +314,7 @@ function addTargetToRule(callback, ruleName, instanceId, statementId) {
       if (err) console.log(err, err.stack); // an error occurred
       else {
         console.log('add Target to rule ' + ruleName)
+        /*
         const response = {
           headers: {
             'Content-Type': 'application/json',
@@ -322,31 +327,39 @@ function addTargetToRule(callback, ruleName, instanceId, statementId) {
         };
 
         callback(null, response);
+        */
       }
   });
 }
 
-module.exports.scheduleTest = (event, context, callback) => {
+//module.exports.scheduleTest = (event, context, callback) => {
+function scheduleTerminate(instanceId, instanceLiveTime) {
 	var cloudwatchevents = new AWS.CloudWatchEvents({apiVersion: '2015-10-07'});
   var lambda = new AWS.Lambda({apiVersion: '2015-03-31'});
 
-	var instanceId = event.queryStringParameters.instanceId;
   const ruleName = 'terminate-ec2-' + instanceId
   const lambdaFuncName = "serverless-courses443-prod-vmDestroy"
+
+  let terminateTimeUnixtime = new Date().getTime() / 1000 + instanceLiveTime * 60;
+  let terminateTime = new Date(terminateTimeUnixtime * 1000)
+  let terminateTimeCron = 'cron(' + terminateTime.getMinutes() + ' ' + terminateTime.getHours() + ' ' + terminateTime.getDate() + ' * ? *)'
+
+  console.log("Schedule vm terminate at " + terminateTimeCron)
 
 
 	var ruleParams = {
 		Name: ruleName,
     //RoleArn: ruleRoleArn,
 		Description: 'Destroy ec2 instance ' + instanceId,
-		ScheduleExpression: 'rate(5 minutes)',
+		//ScheduleExpression: 'rate(' + instanceLiveTime + ' minutes)',
+		ScheduleExpression: terminateTimeCron,
 		State: "ENABLED"
 	};
 
   cloudwatchevents.putRule(ruleParams, function(err, ruleData) {
       if (err) console.log(err, err.stack);
       else {
-        console.log('Rule ' + ruleName + ' added')
+        console.log('Rule ' + ruleName + ' added, scheduled at ' + terminateTime)
 
         const statementId = "permission-lambda-" + instanceId
 
@@ -364,7 +377,7 @@ module.exports.scheduleTest = (event, context, callback) => {
    				else {
      				console.log("Permission was added");
 
-        		addTargetToRule(callback, ruleName, instanceId, statementId)
+        		addTargetToRule(ruleName, instanceId, statementId)
 					}
  				});
 
@@ -418,18 +431,15 @@ module.exports.vmDestroy = (event, context, callback) => {
 
  var ec2 = new AWS.EC2({apiVersion: '2016-11-15'});
 
- var instanceId = event.instanceId
+  let instanceId = event.instanceId
+  console.log('Destroy instance ' + instanceId + ' by timeout')
 
- var params = {
-     InstanceIds: [ instanceId ]
- };
-
- ec2.terminateInstances({ InstanceIds: [ instanceId ] }, function(err, data) {
+  ec2.terminateInstances({ InstanceIds: [ instanceId ] }, function(err, data) {
     if (err) {
       console.log(err, err.stack)
     }
     else {
-      console.log("Instance " + instaceID + " was terminated")
+      console.log('Instance was terminated ' + data)
     }
  });
  callback(null, 'Finished');
