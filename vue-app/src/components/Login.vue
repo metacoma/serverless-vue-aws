@@ -4,7 +4,8 @@
       <h3 class="md-title">Courses</h3>
     </md-toolbar>
    <form novalidate class="login md-alignment-top-center" @submit.prevent="login">
-      <md-card class="md-layout-item md-size-50 md-small-size-100">
+      <!-- <md-card class="md-layout-item md-size-50 md-small-size-100"> -->
+      <md-card class="login md-alignment-top-center md-size-10 md-small-size-20">
         <md-card-header>
           <div class="md-title">Auth</div>
         </md-card-header>
