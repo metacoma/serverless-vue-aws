@@ -2,6 +2,8 @@ FROM node:9.11-slim AS vue-app
 RUN npm install -g vue                  \
   vue-material                          \
   webpack                               \
+  sass-loader                           \
+  node-sass                             \
   webpack-dev-server
 
 FROM vue-app AS vue-app-builder
